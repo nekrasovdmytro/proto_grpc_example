@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+service CarCollection {
+    rpc GetList (CarRequest) returns (CarResponse) {}
+};
+
+message Car {
+    string type = 1;
+    int64 year = 2;
+}
+
+message CarRequest {
+    int64 year = 1;
+    int32 limit = 2;
+};
+
+message CarResponse {
+    repeated Car list = 1;
+};
