@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"improve/core"
 	pb "improve/proto"
 	"log"
@@ -17,6 +16,7 @@ const (
 )
 
 var clientConn *grpc.ClientConn
+var api core.Api
 
 func main() {
 	api := core.Api{
@@ -24,27 +24,31 @@ func main() {
 	}
 
 	api.HandleHttpFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		conn := api.GrpcClientConn(address)
-		defer conn.Close()
+		var carResponse *pb.CarResponse
+		ch := make(chan *pb.CarResponse)
+		go getListRpc(ch)
 
-		client := pb.NewCarCollectionClient(conn)
+		carResponse = <-ch
 
-		// Contact the server and print out its response.
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-
-		r, err := client.GetList(ctx, &pb.CarRequest{Year: 2018, Limit: 10})
-
-		if err != nil {
-			log.Fatalf("Err: %v", err)
-		}
-
-		b, err := json.Marshal(r)
-
-		if err != nil {
-			log.Fatalf("Json Err: %v", err)
-		}
-
-		w.Write(b)
+		api.HandleJson(w, carResponse)
 	})
+}
+
+func getListRpc(ch chan<- *pb.CarResponse) {
+	conn := api.GrpcClientConn(address)
+	defer conn.Close()
+
+	client := pb.NewCarCollectionClient(conn)
+
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	r, err := client.GetList(ctx, &pb.CarRequest{Year: 2018, Limit: 10})
+
+	if err != nil {
+		log.Fatalf("Err: %v", err)
+	}
+
+	ch <- r
 }

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -30,4 +31,14 @@ func (api *Api) HandleHttpFunc(pattern string, callback func(http.ResponseWriter
 	http.HandleFunc(pattern, callback)
 
 	log.Fatal(http.ListenAndServe(api.Host, nil))
+}
+
+func (api *Api) HandleJson(w http.ResponseWriter, r interface{}) {
+	b, err := json.Marshal(r)
+
+	if err != nil {
+		log.Fatalf("Json Err: %v", err)
+	}
+
+	w.Write(b)
 }
