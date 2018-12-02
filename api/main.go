@@ -11,6 +11,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+type CarInputObject struct {
+	Type string `json:"type"`
+	Year uint64 `json:"year"`
+}
+
 const (
 	address = "localhost:12345"
 )
@@ -24,9 +29,12 @@ func main() {
 	}
 
 	api.HandleHttpFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		var in *CarInputObject
+		api.ParseJson(req.Body, &in)
+
 		var carResponse *pb.CarResponse
 		ch := make(chan *pb.CarResponse)
-		go getListRpc(ch)
+		go getListRpc(ch, in)
 
 		carResponse = <-ch
 
@@ -34,7 +42,7 @@ func main() {
 	})
 }
 
-func getListRpc(ch chan<- *pb.CarResponse) {
+func getListRpc(ch chan<- *pb.CarResponse, in *CarInputObject) {
 	conn := api.GrpcClientConn(address)
 	defer conn.Close()
 
@@ -44,7 +52,7 @@ func getListRpc(ch chan<- *pb.CarResponse) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	r, err := client.GetList(ctx, &pb.CarRequest{Year: 2018, Limit: 10})
+	r, err := client.GetList(ctx, &pb.CarRequest{Year: in.Year, Type: in.Type, Limit: 10})
 
 	if err != nil {
 		log.Fatalf("Err: %v", err)

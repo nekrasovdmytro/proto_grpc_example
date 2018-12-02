@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+var list []*pb.Car
+
 const (
 	port = ":12345"
 )
@@ -17,10 +19,23 @@ const (
 type server struct{}
 
 func (s *server) GetList(ctx context.Context, r *pb.CarRequest) (*pb.CarResponse, error) {
-	var list []*pb.Car
-	list = append(list, &pb.Car{Type: "MMMM"})
 
-	return &pb.CarResponse{List: list}, nil
+	list = []*pb.Car{
+		&pb.Car{Type: "AMMM", Year: 2018},
+		&pb.Car{Type: "BMMM", Year: 2017},
+		&pb.Car{Type: "CMMM", Year: 2018},
+		&pb.Car{Type: "DMMM", Year: 2018},
+	}
+
+	var result []*pb.Car
+
+	for _, i := range list {
+		if r.Year == i.Year {
+			result = append(result, i)
+		}
+	}
+
+	return &pb.CarResponse{List: result}, nil
 }
 
 func main() {

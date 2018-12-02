@@ -1,7 +1,9 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 
@@ -27,10 +29,23 @@ func (api *Api) GrpcClientConn(address string) *grpc.ClientConn {
 	return conn
 }
 
-func (api *Api) HandleHttpFunc(pattern string, callback func(http.ResponseWriter, *http.Request)) {
+func (api *Api) HandleHttpFunc(pattern string, callback func(w http.ResponseWriter, req *http.Request)) {
 	http.HandleFunc(pattern, callback)
 
 	log.Fatal(http.ListenAndServe(api.Host, nil))
+}
+
+func (api *Api) readerToBuffer(rc io.Reader) bytes.Buffer {
+	buf := bytes.Buffer{}
+	buf.ReadFrom(rc)
+
+	return buf
+}
+
+func (api *Api) ParseJson(r io.Reader, object interface{}) {
+	buf := api.readerToBuffer(r)
+
+	json.Unmarshal(buf.Bytes(), object)
 }
 
 func (api *Api) HandleJson(w http.ResponseWriter, r interface{}) {
