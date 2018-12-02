@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
-	"improve/model"
 )
 
 func main() {
-	fmt.Print()
+	t := `
+To run api:
+$ go run api/main.go
 
-	car := model.Car{
-		Type: "ZBRW",
-		Year: 111,
-	}
+To run service:
+$ go run service/main.go
 
-	fmt.Println(car)
+`
+
+	fmt.Printf(t)
 }
